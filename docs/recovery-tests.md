@@ -1,0 +1,61 @@
+# Recovery acceptance and manual tests
+
+Status: proposed acceptance criteria for the simulated frontend, not a claim that these behaviors are implemented or verified. Real speech recognition, Gmail authorization, server persistence, and network recovery require later integration tests. Keep simulation disclosures visible; sample inbox access must never be called a real Gmail connection.
+
+Context: [domain language](../CONTEXT.md) and [backend proposal](architecture.md). User-reported production observations motivated these cases: no proactive continuation after hangup, newly spoken task context unavailable after a mid-speech hangup, and a completion reaction appearing without the substantive result. These observations do not establish backend causes or repeatability.
+
+## State acceptance requirements
+
+- Preserve one conversation across text, simulated calls, connection cards, and task results. Ending a call does not reset accepted facts or known work.
+- Track assistant name and preferred user name separately. For each setup item, distinguish unknown, offered, supplied, and deferred where applicable. A refusal is not a missing answer that should be asked again every turn.
+- Distinguish received speech fragments from accepted instructions. Preserve available fragments with their uncertainty; do not fabricate missing words or treat every partial sentence as an executable request.
+- Ask only for missing information: “I caught ‘find the email,’ but missed who it was from. Who should I search for?” If nothing arrived, say so plainly and ask for the request again without claiming a transcript exists.
+- Proposed demo policy: an accepted read-only task continues after hangup; explicit cancellation stops it. This is a demo policy to evaluate, not a previously settled production requirement. No outbound messages or real commitments are made.
+- Keep task execution and result delivery separate: queued/running/result ready/failed/cancelled versus delivery pending/delivered/failed. A checkmark alone is not a task result. A displayed result means rendered in the conversation, not proof the user read it.
+- Corrections update the relevant fact or task revision across both channels. Late events may add evidence but cannot silently restore superseded instructions or publish an obsolete result as current.
+- Delivery retry reuses the existing result and task identity. It must not duplicate the task, produce multiple result cards, or require the user to ask “What happened?”
+- Gmail states distinguish disconnected, connecting, cancelled/failed, simulated sample access, and genuinely connected. A spoken email address, opened card, or cancelled flow does not authorize Gmail access.
+- Allow useful work before setup is finished when the task permits it. Attempt the requested setup and voice introduction gently; do not make the first useful result depend on irrelevant fields.
+- If refresh persistence is supported, state the scope accurately (for example, this browser). Refresh restores durable conversation/facts/task results; a formerly active call becomes ended or reconnectable, never a fake ongoing call. If persistence is absent, disclose that limitation instead of claiming recovery.
+- Reviewer failure controls belong outside the ordinary conversation. Every simulated failure should be reproducible, resettable, and visibly distinguishable from real service behavior.
+
+## First walkthrough: one coherent session
+
+Use this sequence when there is only one fresh onboarding session. Do not finish onboarding normally and assume a second fresh session will be available.
+
+1. Choose the assistant name **Nova** in text. Accept the simulated voice introduction and give the preferred name **Alex**. Confirm the conversation retains both distinct names.
+2. Start “Find the email from…” and trigger **mid-speech hangup**. With a captured fragment, expect one focused clarification in the same text conversation. With no captured fragment, expect an honest request to repeat the instruction.
+3. Continue in chat: **“Find the sample email about my train booking. Actually, call me Alex Morgan.”** Expect the correction to persist and the task to continue from the recovered context.
+4. Open and cancel the simulated Gmail connection. Expect disconnected/cancelled state and a clearly labeled sample-inbox alternative. Select sample data; it is not a real connection.
+5. Trigger **result delivery failure** after the sample search finishes. Expect recovery messaging and a retry that delivers the saved result exactly once, without another search or prompt for the answer.
+6. Refresh. Expect the chosen names, sample-data disclosure, conversation, and delivered result to survive if browser persistence is supported. There must be no ghost call or duplicate result.
+
+This walkthrough combines failures to demonstrate recovery. Use the isolated cases below to locate the cause of a failure. Reserve no-call, missing-transcript, and clean-baseline variants for the demo reset control or another permitted session. Do not churn production accounts to manufacture fresh onboarding.
+
+## Test cases
+
+P0: must work before claiming the simulated recovery flow works. P1: required before calling onboarding robust. All cases start **not run**; record actual outcomes separately.
+
+| ID  | Priority | Setup and action                                                                                                                               | Pass condition                                                                                                                                                                                           |
+| --- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R01 | P0       | Capture only “Find the email from…”; end the call before the simulated turn completes.                                                         | The fragment survives, is treated as incomplete, and produces one focused clarification. No invented sender or automatic search.                                                                         |
+| R02 | P0       | Accept the complete request “Find the sample train-booking email”; hang up before the assistant acknowledges it.                               | The accepted task survives independently of the assistant response, continues once, and delivers the result in text.                                                                                     |
+| R03 | P0       | Trigger missing transcript with no newly received words, then hang up.                                                                         | Prior accepted context remains. The assistant admits it missed the new request and asks for it; it does not invent a task or erase prior context.                                                        |
+| R04 | P0       | While a simulated call has preferred name “Alex,” type “Call me Alex Morgan.” Then release a delayed older voice event containing “Alex.”      | The explicit newer correction remains current in recap and subsequent responses. The late event does not revert it.                                                                                      |
+| R05 | P0       | Start a sample email search, then type “Actually, find the train booking, not the hotel booking.” Release the old result after the correction. | The current request uses the corrected target. An obsolete result is suppressed or clearly identified as superseded; it is not presented as completion of the new request.                               |
+| R06 | P0       | Let a sample search create a result; inject failure before its result card appears.                                                            | The interface distinguishes delivery trouble from task failure, offers or performs recovery, and eventually shows the substantive saved result without another search.                                   |
+| R07 | P0       | In R06, click retry twice rapidly or replay the delivery event.                                                                                | One task and one result card remain. Repeated delivery neither duplicates work nor produces conflicting completion messages.                                                                             |
+| R08 | P0       | Open the simulated Gmail connection card, cancel, and continue chatting.                                                                       | Connection remains cancelled/disconnected; no success badge or implied inbox access. The known task survives and sample/pasted context remains available.                                                |
+| R09 | P0       | Refresh after names, a task, and a result are accepted. Separately refresh during a simulated call.                                            | Supported persisted data survives. Call activity stops or requires explicit reconnection. Restored results are not duplicated and sample mode stays labeled.                                             |
+| R10 | P1       | Before setup, type “Draft a polite follow-up about an overdue invoice. I cannot call.”                                                         | Useful drafting starts without Gmail or name requirements. Voice preference is respected and deferred setup does not repeatedly interrupt the task.                                                      |
+| R11 | P1       | Name the assistant Nova; say “I’m Noor, N-O-O-R. Help me plan a study schedule.”                                                               | Assistant name, preferred name, and help request are captured separately. Already supplied information is not requested again as though absent.                                                          |
+| R12 | P1       | During the call type “I’m somewhere noisy; let’s finish here,” then end the call.                                                              | Text continues the same conversation, accepted facts remain, and only genuinely missing information is requested. No repeated automatic call attempts.                                                   |
+| R13 | P1       | Say “Not ready to connect Gmail.” Continue an unrelated task and send two more messages.                                                       | The refusal remains respected. No fake connection; no repeated connection prompt each turn. A user-initiated connection option stays available.                                                          |
+| R14 | P1       | Start an accepted sample search, explicitly say “Cancel that,” and deliver a late completion event.                                            | Task remains cancelled. The late completion does not resurrect the task or announce success; a later new request is treated independently.                                                               |
+| R15 | P1       | Trigger a simulated tool failure before a result exists. Retry once, then use the demo reset control while work is pending.                    | The app reports a task failure rather than a delivery failure, retry does not falsely reuse a nonexistent result, and reset prevents old callbacks or persisted state from appearing in the new session. |
+
+## Evidence and completion
+
+For each run record: test ID; starting state; exact action/utterance; whether input was partial or accepted; visible response; resulting task/connection state; recovery action; screenshot or reviewer event trace; pass/fail/not supported; and whether reproduced. Keep the event trace free of tokens, authorization codes, and private inbox content.
+
+Assess assertions against observable state, not an assistant's promise that it remembered or completed something. A scripted simulator passing these tests demonstrates the interaction contract only. It does not establish real transcription reliability, network resilience, Gmail permissions, backend durability, or arbitrary conversational intelligence.
