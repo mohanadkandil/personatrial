@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   title: "Persona Trial",
   description: "Persona Trial — an onboarding prototype.",
   robots: { index: false, follow: false },
+  other: { "darkreader-lock": "true" },
 };
 export const viewport: Viewport = {
   themeColor: "#080909",

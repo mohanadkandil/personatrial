@@ -7,18 +7,31 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "db:migrate": "node --env-file-if-exists=.env.local --import tsx scripts/migrate.ts",
+    "test:backend": "node --conditions=react-server --import tsx --test tests/backend/*.test.ts tests/integrations/*.test.ts tests/voice/*.test.ts",
+    "voice:dev": "node --env-file-if-exists=.env.local --conditions=react-server --import tsx src/voice/worker.ts dev",
+    "jobs:dev": "npx --yes inngest-cli@1.45.1 dev --host 127.0.0.1 --persist -u http://localhost:3100/api/inngest",
+    "test:live": "playwright test --config playwright.live.config.ts",
+    "voice:start": "node --conditions=react-server --import tsx src/voice/worker.ts start"
   },
   "dependencies": {
-    "@composio/core": "^0.21.0",
+    "@livekit/agents": "^1.9.1",
+    "@livekit/agents-plugin-openai": "^1.9.1",
+    "entities": "^8.1.0",
     "inngest": "^4.21.0",
+    "livekit-client": "^2.22.3",
+    "livekit-server-sdk": "^2.19.1",
     "lucide-react": "^0.577.0",
     "next": "16.3.6",
+    "openai": "^7.23.0",
     "postgres": "^3.4.9",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "server-only": "^0.0.1",
-    "three": "^0.183.2"
+    "three": "^0.183.2",
+    "tsx": "^4.23.15",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
@@ -27,7 +40,6 @@
     "@types/react-dom": "^19",
     "@types/three": "^0.183.1",
     "prettier": "^3.9.9",
-    "tsx": "^4.23.15",
     "typescript": "^5.9.3"
   }
 }

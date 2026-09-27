@@ -1,0 +1,7 @@
+.env*
+.git/
+test-results/
+playwright-report/
+tests/
+*.md
+public/plan.html

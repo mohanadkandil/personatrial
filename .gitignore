@@ -4,10 +4,13 @@ out/
 .env*
 !.env.example
 .vercel/
+.inngest/
 *.tsbuildinfo
 test-results/
 playwright-report/
 .DS_Store
 
 *.md
+!README.md
 /public/plan.html
+.vercel
