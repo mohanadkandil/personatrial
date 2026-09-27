@@ -5,8 +5,8 @@ import "./globals.css";
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist" });
 const mono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
 export const metadata: Metadata = {
-  title: "Persona Trail",
-  description: "Persona Trail — an onboarding prototype.",
+  title: "Persona Trial",
+  description: "Persona Trial — an onboarding prototype.",
   robots: { index: false, follow: false },
 };
 export const viewport: Viewport = {

@@ -8,7 +8,7 @@ export default function Home() {
         <div className="entry-orb">
           <ParticleScene />
         </div>
-        <h1>Persona Trail</h1>
+        <h1>Persona Trial</h1>
         <Link className="enter-button" href="/chat">
           Begin
         </Link>

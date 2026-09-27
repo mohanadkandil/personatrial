@@ -209,7 +209,7 @@ export function ChatExperience() {
 
   return (
     <main className="chat-page">
-      <Link href="/" className="canvas-back" aria-label="Back to Persona Trail">
+      <Link href="/" className="canvas-back" aria-label="Back to Persona Trial">
         <ArrowLeft size={18} />
       </Link>
       <div className="chat-stage">
