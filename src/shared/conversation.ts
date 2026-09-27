@@ -16,6 +16,7 @@ export type ConversationMessage = {
   role: "user" | "assistant";
   text: string;
   renderedAt: string | null;
+  clientEventId?: string | null;
 };
 
 export type Task = {

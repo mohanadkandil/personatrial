@@ -17,6 +17,10 @@ import type {
 } from "@/shared/conversation";
 import { IPhone } from "./device/iphone";
 import { VoiceOrb } from "./voice-orb";
+import {
+  useOutgoingMessages,
+  type OutgoingMessage,
+} from "./chat/use-outgoing-messages";
 
 type CallAttempt = {
   controller: AbortController;
@@ -40,11 +44,16 @@ async function releaseCall(attempt: CallAttempt) {
   ]);
 }
 
-async function request<T>(url: string, body?: unknown): Promise<T> {
+async function request<T>(
+  url: string,
+  body?: unknown,
+  signal?: AbortSignal,
+): Promise<T> {
   const response = await fetch(url, {
     method: body ? "POST" : "GET",
     credentials: "same-origin",
     cache: "no-store",
+    signal,
     headers: body ? { "Content-Type": "application/json" } : undefined,
     body: body ? JSON.stringify(body) : undefined,
   });
@@ -66,6 +75,13 @@ async function request<T>(url: string, body?: unknown): Promise<T> {
   }
 
   return response.json();
+}
+
+function submitChatMessage(
+  message: Pick<OutgoingMessage, "eventId" | "text">,
+  signal: AbortSignal,
+) {
+  return request("/api/conversation", { type: "message", ...message }, signal);
 }
 
 type GmailConnection = { attemptId: string; connectUrl: string };
@@ -145,7 +161,6 @@ function Conversation({
   const [input, setInput] = useState("");
   const [notice, setNotice] = useState(initialNotice ?? "");
   const [ready, setReady] = useState(false);
-  const [sending, setSending] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [callState, setCallState] = useState<
     "idle" | "connecting" | "connected"
@@ -166,11 +181,14 @@ function Conversation({
     initialSnapshot ? Promise.resolve(initialSnapshot) : null,
   );
   const cursor = useRef(0);
-  const pendingMessage = useRef<{ text: string; eventId: string } | null>(null);
   const callAttempt = useRef<CallAttempt | null>(null);
   const audio = useRef<HTMLDivElement>(null);
   const bottom = useRef<HTMLDivElement>(null);
   const name = profile.agentName ?? "Persona";
+  const { outgoing, send: sendOutgoing } = useOutgoingMessages(
+    messages,
+    submitChatMessage,
+  );
 
   const applySnapshot = useCallback((snapshot: ConversationSnapshot) => {
     setMessages((previous) => {
@@ -238,8 +256,6 @@ function Conversation({
   }, [applySnapshot]);
 
   useEffect(() => {
-    bottom.current?.scrollIntoView({ behavior: "instant", block: "end" });
-
     const ids = messages
       .filter((message) => !message.renderedAt)
       .map((message) => message.id)
@@ -265,6 +281,10 @@ function Conversation({
 
     return () => cancelAnimationFrame(frame);
   }, [messages]);
+
+  useEffect(() => {
+    bottom.current?.scrollIntoView({ behavior: "instant", block: "end" });
+  }, [messages, outgoing.length]);
 
   useEffect(() => {
     if (callState !== "connected") return;
@@ -345,35 +365,15 @@ function Conversation({
     };
   }, [ready, gmailConnected, gmailAttempt]);
 
-  async function send(event: FormEvent) {
+  function send(event: FormEvent) {
     event.preventDefault();
+    const text = input.trim();
 
-    if (!input.trim() || sending || !ready) return;
+    if (!text || !ready) return;
 
-    const submittedDraft = input;
-    const text = submittedDraft.trim();
-    const pending =
-      pendingMessage.current?.text === text
-        ? pendingMessage.current
-        : { text, eventId: crypto.randomUUID() };
-
-    pendingMessage.current = pending;
-    setSending(true);
+    setInput("");
     setNotice("");
-
-    try {
-      await request("/api/conversation", { type: "message", ...pending });
-      pendingMessage.current = null;
-      setInput((current) => (current === submittedDraft ? "" : current));
-    } catch (error) {
-      setNotice(
-        error instanceof Error
-          ? error.message
-          : "Your message wasn’t sent. Try again.",
-      );
-    } finally {
-      setSending(false);
-    }
+    void sendOutgoing({ text, eventId: crypto.randomUUID() });
   }
 
   function stopCall(
@@ -610,6 +610,31 @@ function Conversation({
                   </div>
                 </div>
               ))}
+              {outgoing.map((message) => (
+                <div key={message.eventId} className="message-row user">
+                  <div className="message-content">
+                    <div className="message-bubble">{message.text}</div>
+                    <div className="message-send-status" role="status">
+                      {message.status === "failed" ? (
+                        <>
+                          Couldn’t confirm ·{" "}
+                          <button
+                            type="button"
+                            aria-label="Retry sending message"
+                            onClick={() => void sendOutgoing(message)}
+                          >
+                            Retry
+                          </button>
+                        </>
+                      ) : message.status === "sending" ? (
+                        "Sending…"
+                      ) : (
+                        "Sent"
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
               <div ref={bottom} />
             </div>
             <div className="composer-area">
@@ -634,7 +659,7 @@ function Conversation({
                 />
                 <button
                   type="submit"
-                  disabled={!ready || sending || !input.trim()}
+                  disabled={!ready || !input.trim()}
                   aria-label="Send message"
                 >
                   <ArrowUp size={19} />

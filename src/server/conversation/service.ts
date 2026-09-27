@@ -810,7 +810,12 @@ export class ConversationService {
       scope,
       async (tx, conversation) => {
         const messages =
-          await tx`SELECT * FROM messages WHERE conversation_id = ${scope.conversationId} AND channel = 'chat' AND sequence > ${after} ORDER BY sequence LIMIT 101`;
+          await tx`SELECT m.*, CASE WHEN e.source_event_id LIKE 'chat:%'
+          THEN substring(e.source_event_id FROM 6) ELSE NULL END AS client_event_id
+          FROM messages m LEFT JOIN evidence e
+            ON e.conversation_id = m.conversation_id AND m.source_key = 'input:' || e.id::text
+          WHERE m.conversation_id = ${scope.conversationId} AND m.channel = 'chat'
+            AND m.sequence > ${after} ORDER BY m.sequence LIMIT 101`;
 
         const evidence = await tx<
           EvidenceRow[]
@@ -840,6 +845,7 @@ export class ConversationService {
             role: row.role,
             text: row.text,
             renderedAt: row.rendered_at?.toISOString() ?? null,
+            clientEventId: row.client_event_id ?? null,
           })),
           evidence: evidence.map(toEvidence),
           tasks: tasks.map(toTask),

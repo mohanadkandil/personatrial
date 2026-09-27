@@ -19,6 +19,7 @@ Conversational onboarding with chat, realtime voice, and Gmail.
 - Shared context across voice and text, with call transcripts kept out of the chat timeline.
 - Durable tasks that continue after hangup, contextual recovery messages, and saved answers delivered in chat.
 - Shared task acceptance/cancellation, revision checks to suppress stale results, retries, and delivery receipts.
+- Immediate outgoing messages with sending status and retry, reconciled without duplicate bubbles.
 - Native OpenAI realtime voice through LiveKit, Postgres state, Inngest jobs, and read-only Gmail through Nango.
 
 ## How to test

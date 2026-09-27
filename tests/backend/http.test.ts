@@ -401,3 +401,24 @@ test("call limits are per owner and separate from message limits", async () => {
   await consumeRequestLimit(a.scope, "message");
   await consumeRequestLimit(b.scope, "call");
 });
+
+test("chat snapshots expose stable client event IDs for retries without exposing voice input", async () => {
+  const { cookie, scope } = await bootstrap();
+  const eventId = randomUUID();
+  const input = {
+    sourceEventId: `chat:${eventId}`,
+    channel: "chat" as const,
+    text: "Keep one bubble",
+    revision: 1,
+    final: true,
+  };
+  await service.appendInput(scope, input, { queueTurn: false });
+  await service.appendInput(scope, input, { queueTurn: false });
+  const response = await GET(
+    new Request(`${origin}/api/conversation`, { headers: { cookie } }),
+  );
+  const snapshot = await response.json();
+  assert.equal(snapshot.messages.length, 1);
+  assert.equal(snapshot.messages[0].clientEventId, eventId);
+  assert.equal(snapshot.messages[0].text, input.text);
+});

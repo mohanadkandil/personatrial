@@ -1058,3 +1058,23 @@ svg {
     animation: none;
   }
 }
+
+.message-send-status {
+  margin: 5px 3px 0;
+  color: #8e8e93;
+  font-size: 11px;
+  text-align: right;
+}
+
+.message-send-status button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #a9cfff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.message-send-status button:hover {
+  text-decoration: underline;
+}
