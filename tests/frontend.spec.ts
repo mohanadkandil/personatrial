@@ -4,13 +4,22 @@ test("name, messages, and hangup recovery survive a refresh", async ({
   page,
 }) => {
   await page.goto("/chat");
-  await page.getByRole("button", { name: "Let’s call you June" }).click();
+  await page
+    .getByRole("textbox", { name: "Message Persona" })
+    .fill("Let’s call you June");
+  await page.getByRole("button", { name: "Send message" }).click();
   await page
     .getByRole("textbox", { name: "Message June" })
     .fill("My name is Noor");
   await page.getByRole("button", { name: "Send message" }).click();
   await expect(page.getByText("Got it, Noor.", { exact: false })).toBeVisible();
+  await expect(
+    page
+      .getByRole("region", { name: "Your conversation" })
+      .getByRole("button", { name: "Start voice preview" }),
+  ).toHaveCount(0);
   await page.getByRole("button", { name: "Start voice preview" }).click();
+  await expect(page.getByRole("textbox")).toBeVisible();
   await expect(
     page.getByText("Your microphone is off.", { exact: false }),
   ).toBeVisible();
@@ -43,16 +52,14 @@ test("sample inbox is opt-in and delivers a result and draft", async ({
   page,
 }) => {
   await page.goto("/chat");
-  await page
-    .getByRole("button", { name: "Give your assistant a little context" })
-    .click();
+  await page.getByRole("button", { name: "Conversation settings" }).click();
+  await page.getByRole("button", { name: "Sample inbox", exact: true }).click();
   await page.getByRole("button", { name: "Maybe later" }).click();
   await expect(
-    page.getByRole("button", { name: "Sample inbox available" }),
+    page.getByText("Sample inbox added", { exact: false }),
   ).toHaveCount(0);
-  await page
-    .getByRole("button", { name: "Give your assistant a little context" })
-    .click();
+  await page.getByRole("button", { name: "Conversation settings" }).click();
+  await page.getByRole("button", { name: "Sample inbox", exact: true }).click();
   await page.getByRole("button", { name: "Try the sample inbox" }).click();
   await page
     .getByRole("textbox", { name: "Message Persona" })
@@ -71,12 +78,17 @@ test("sample inbox is opt-in and delivers a result and draft", async ({
 
 test("reset is explicit and removes saved state", async ({ page }) => {
   await page.goto("/chat");
-  await page.getByRole("button", { name: "Let’s call you June" }).click();
+  await page
+    .getByRole("textbox", { name: "Message Persona" })
+    .fill("Let’s call you June");
+  await page.getByRole("button", { name: "Send message" }).click();
+  await page.getByRole("button", { name: "Conversation settings" }).click();
   await page.getByRole("button", { name: "Start fresh", exact: true }).click();
   await page.getByRole("button", { name: "Keep this conversation" }).click();
   await expect(
     page.getByRole("textbox", { name: "Message June" }),
   ).toBeVisible();
+  await page.getByRole("button", { name: "Conversation settings" }).click();
   await page.getByRole("button", { name: "Start fresh", exact: true }).click();
   await page
     .getByRole("dialog")
@@ -87,7 +99,7 @@ test("reset is explicit and removes saved state", async ({ page }) => {
     page.getByRole("textbox", { name: "Message Persona" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Let’s call you June" }),
+    page.getByText("What should you call me?", { exact: true }),
   ).toBeVisible();
 });
 
@@ -107,7 +119,7 @@ test("mobile layout has no horizontal overflow and call controls stay visible", 
   await expect(
     page.getByRole("button", { name: "End voice preview" }),
   ).toBeInViewport();
-  await page.getByRole("button", { name: "Continue in chat" }).click();
+  await page.getByRole("button", { name: "End voice preview" }).click();
   await expect(
     page.getByRole("textbox", { name: "Message Persona" }),
   ).toBeInViewport();

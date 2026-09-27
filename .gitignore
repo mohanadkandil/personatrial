@@ -8,3 +8,6 @@ out/
 test-results/
 playwright-report/
 .DS_Store
+
+*.md
+/public/plan.html

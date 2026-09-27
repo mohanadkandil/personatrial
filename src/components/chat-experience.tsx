@@ -11,21 +11,14 @@ import Link from "next/link";
 import {
   ArrowLeft,
   ArrowUp,
-  ArrowUpRight,
   AudioLines,
   Check,
-  ChevronRight,
   Mail,
-  MessageCircle,
-  MoreHorizontal,
-  Phone,
-  PhoneOff,
   RotateCcw,
-  Volume2,
-  VolumeX,
   X,
 } from "lucide-react";
-import { Brand, Mark } from "./brand";
+import { Mark } from "./brand";
+import { IPhone } from "./device/iphone";
 import {
   initialState,
   isDemoState,
@@ -76,7 +69,6 @@ export function ChatExperience() {
   const [input, setInput] = useState("");
   const [call, setCall] = useState(false);
   const [elapsed, setElapsed] = useState(0);
-  const [muted, setMuted] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [voiceNotice, setVoiceNotice] = useState("");
   const [modal, setModal] = useState<"gmail" | "settings" | "reset" | null>(
@@ -147,7 +139,6 @@ export function ChatExperience() {
   function startCall() {
     if (!ready || call) return;
     setElapsed(0);
-    setMuted(false);
     setVoiceNotice("");
     setCall(true);
     setState((s) => ({ ...s, callWasActive: true }));
@@ -192,7 +183,6 @@ export function ChatExperience() {
         "Playback stopped. You can try again or continue in chat.",
       );
     };
-    setMuted(false);
     setSpeaking(true);
     setVoiceNotice("");
     window.speechSynthesis.speak(utterance);
@@ -219,155 +209,31 @@ export function ChatExperience() {
 
   return (
     <main className="chat-page">
-      <header className="site-header">
-        <Brand />
-        <div className="preview-badge">
-          <span className="status-dot" /> INTERACTIVE PREVIEW
-        </div>
-        <Link href="/" className="back-link">
-          <ArrowLeft size={15} /> Back to the idea
-        </Link>
-      </header>
+      <Link href="/" className="canvas-back" aria-label="Back to Persona Trail">
+        <ArrowLeft size={18} />
+      </Link>
       <div className="chat-stage">
-        <aside className="stage-copy">
-          <div className="eyebrow">YOUR OWN LITTLE CORNER</div>
-          <h1>
-            A conversation.
-            <br />A little clarity.
-            <br />
-            <em>A fresh start.</em>
-          </h1>
-          <p>
-            No perfect prompts.
-            <br />
-            No need to know where to begin.
-            <br />
-            Just start with what’s on your mind.
-          </p>
-          <div className="stage-note">
-            <span className="note-line" />
-            <span>
-              Make it yours.
-              <br />
-              Even the name.
-            </span>
-          </div>
-        </aside>
-        <section
-          className={`phone-shell ${call ? "in-call" : ""}`}
-          aria-label="Your conversation"
-        >
-          <div className="phone-camera">
-            <span />
-          </div>
-          <header className="conversation-header">
-            <span className="avatar">
-              <Mark small />
-            </span>
-            <div>
-              <strong>{state.name}</strong>
-              <span>
-                <i className="status-dot" /> Here with you
+        <IPhone>
+          <section className="phone-shell" aria-label="Your conversation">
+            <header className="conversation-header">
+              <span className="avatar">
+                <Mark small />
               </span>
-            </div>
-            <div className="header-actions">
-              <button
-                ref={callTrigger}
-                className="icon-button call-trigger"
-                onClick={startCall}
-                disabled={!ready || call}
-                aria-label="Start voice preview"
-              >
-                <Phone size={19} />
-              </button>
-              <button
-                className="icon-button"
-                onClick={() => {
-                  setEditedName(state.name);
-                  setModal("settings");
-                }}
-                aria-label="Conversation settings"
-              >
-                <MoreHorizontal size={22} />
-              </button>
-            </div>
-          </header>
-          {call ? (
-            <div className="call-screen">
-              <div className="call-meta">
-                VOICE PREVIEW{" "}
-                <span>
-                  {Math.floor(elapsed / 60)}:
-                  {String(elapsed % 60).padStart(2, "0")}
-                </span>
-              </div>
-              <div className={`voice-orb ${speaking ? "speaking" : ""}`}>
-                <div />
-                <div />
-                <div />
-                <Mark />
-              </div>
-              <h2 ref={callHeading} tabIndex={-1}>
-                {speaking ? "A familiar voice." : "A little closer."}
-              </h2>
-              <p>
-                {speaking
-                  ? `${state.name} is speaking…`
-                  : `Say hello to ${state.name}.`}
-              </p>
-              <button
-                className="play-voice"
-                onClick={playGreeting}
-                disabled={speaking}
-              >
-                <AudioLines size={17} />{" "}
-                {speaking ? "Playing greeting" : "Play a sample greeting"}
-              </button>
-              <div className="call-disclaimer">
-                Browser voice sample. Your microphone is off.
-                <br />
-                Live conversation comes with the backend.
-              </div>
-              {voiceNotice && (
-                <p className="voice-notice" role="status">
-                  {voiceNotice}
-                </p>
-              )}
-              <div className="call-controls">
+              <div>
                 <button
-                  className={`round-control ${muted ? "selected" : ""}`}
-                  aria-label={muted ? "Unmute playback" : "Mute playback"}
-                  aria-pressed={muted}
+                  className="contact-name"
                   onClick={() => {
-                    if (!muted) {
-                      window.speechSynthesis?.cancel();
-                      setSpeaking(false);
-                    }
-                    setMuted(!muted);
+                    setEditedName(state.name);
+                    setModal("settings");
                   }}
+                  aria-label="Conversation settings"
+                  title="Conversation settings"
                 >
-                  {muted ? <VolumeX size={21} /> : <Volume2 size={21} />}
+                  {state.name}
                 </button>
-                <button
-                  className="round-control end-call"
-                  aria-label="End voice preview"
-                  onClick={endCall}
-                >
-                  <PhoneOff size={23} />
-                </button>
-                <button
-                  className="round-control"
-                  aria-label="Continue in chat"
-                  onClick={endCall}
-                >
-                  <MessageCircle size={21} />
-                </button>
+                <span>Preview</span>
               </div>
-              <span className="end-call-hint">
-                Pick up in chat, whenever you like.
-              </span>
-            </div>
-          ) : (
+            </header>
             <>
               <div
                 className="conversation-body"
@@ -375,7 +241,7 @@ export function ChatExperience() {
                 aria-label="Messages"
                 aria-live="polite"
               >
-                <div className="day-label">A NEW BEGINNING</div>
+                <div className="day-label">Today</div>
                 {state.messages.map((m) =>
                   m.role === "event" ? (
                     <div className="event-message" key={m.id}>
@@ -383,11 +249,6 @@ export function ChatExperience() {
                     </div>
                   ) : (
                     <div key={m.id} className={`message-row ${m.role}`}>
-                      {m.role === "assistant" && (
-                        <span className="message-avatar">
-                          <Mark small />
-                        </span>
-                      )}
                       <div className="message-content">
                         <div className="message-bubble">{m.text}</div>
                         {m.card === "email" && (
@@ -410,7 +271,7 @@ export function ChatExperience() {
                               onClick={() => send("Draft a reply")}
                               aria-label="Draft a reply to sample email"
                             >
-                              Draft a reply <ArrowUpRight size={14} />
+                              Draft a reply
                             </button>
                           </div>
                         )}
@@ -418,31 +279,9 @@ export function ChatExperience() {
                     </div>
                   ),
                 )}
-                {state.messages.length === 2 && (
-                  <div className="suggestions">
-                    <button onClick={() => send("Let’s call you June")}>
-                      Let’s call you June <ArrowUpRight size={12} />
-                    </button>
-                    <button onClick={() => send("Help me plan my day")}>
-                      I could use a hand <ArrowUpRight size={12} />
-                    </button>
-                  </div>
-                )}
                 <div ref={bottom} />
               </div>
               <div className="composer-area">
-                <button
-                  className={`inbox-link ${state.inbox ? "added" : ""}`}
-                  onClick={() => setModal("gmail")}
-                >
-                  <Mail size={14} />
-                  <span>
-                    {state.inbox
-                      ? "Sample inbox available"
-                      : "Give your assistant a little context"}
-                  </span>
-                  <ChevronRight size={14} />
-                </button>
                 <form className="composer" onSubmit={submit}>
                   <textarea
                     ref={composer}
@@ -471,37 +310,88 @@ export function ChatExperience() {
                     <ArrowUp size={19} />
                   </button>
                 </form>
-                <p className="composer-caption">
-                  A little space to think out loud.
-                </p>
+                <p className="composer-caption">Scripted preview</p>
               </div>
             </>
+          </section>
+        </IPhone>
+        <aside
+          className={`voice-dock ${call ? "active" : ""}`}
+          aria-label="Website call controls"
+        >
+          {call ? (
+            <>
+              <div
+                className={`voice-orb ${speaking ? "speaking" : ""}`}
+                aria-hidden="true"
+              >
+                <div />
+                <div />
+                <div />
+                <Mark />
+              </div>
+              <h2 ref={callHeading} tabIndex={-1}>
+                {state.name}
+              </h2>
+              <p className="voice-time">
+                Voice preview <span>·</span> {Math.floor(elapsed / 60)}:
+                {String(elapsed % 60).padStart(2, "0")}
+              </p>
+              <div className="voice-links">
+                <button
+                  className="quiet-link"
+                  onClick={() => {
+                    if (speaking) {
+                      window.speechSynthesis?.cancel();
+                      setSpeaking(false);
+                    } else playGreeting();
+                  }}
+                  aria-label={
+                    speaking ? "Stop sample greeting" : "Play a sample greeting"
+                  }
+                >
+                  {speaking ? "Stop audio" : "Hear a greeting"}
+                  <AudioLines size={14} />
+                </button>
+                <button
+                  className="quiet-link end-voice"
+                  onClick={endCall}
+                  aria-label="End voice preview"
+                >
+                  End call
+                  <X size={13} />
+                </button>
+              </div>
+              <p className="voice-disclaimer">
+                Sample audio. Your microphone is off.
+              </p>
+              {voiceNotice && (
+                <p className="voice-notice" role="status">
+                  {voiceNotice}
+                </p>
+              )}
+            </>
+          ) : (
+            <div className="call-invitation">
+              <span>Want to call?</span>
+              <button
+                ref={callTrigger}
+                className="quiet-link"
+                disabled={!ready}
+                onClick={startCall}
+                aria-label="Start voice preview"
+              >
+                Press here
+              </button>
+            </div>
           )}
-          <div className="home-indicator" />
-        </section>
-        <aside className="stage-caption">
-          <span className="caption-plus">+</span>
-          <p>
-            A name you choose.
-            <br />A conversation you shape.
-          </p>
-          <div className="caption-divider" />
-          <span>TEXT. TALK. PICK UP HERE.</span>
         </aside>
       </div>
-      <footer className="chat-footer">
-        <span>
-          {storageWarning
-            ? "Browser storage unavailable · this session won’t survive refresh"
-            : "Saved in this browser. Yours to reset."}
-        </span>
-        <div>
-          <span>Scripted chat · sample voice · no Gmail access</span>
-          <button onClick={() => setModal("reset")}>
-            <RotateCcw size={12} /> Start fresh
-          </button>
-        </div>
-      </footer>
+      {storageWarning && (
+        <p className="storage-warning" role="status">
+          Browser storage unavailable. This conversation won’t survive refresh.
+        </p>
+      )}
       {modal === "gmail" && (
         <Modal title="A little more context." close={() => setModal(null)}>
           <div className="modal-icon">
@@ -520,7 +410,6 @@ export function ChatExperience() {
           </div>
           <button className="primary-button modal-primary" onClick={useInbox}>
             {state.inbox ? "Back to the conversation" : "Try the sample inbox"}
-            <ArrowRightIcon />
           </button>
           <button className="text-button" onClick={() => setModal(null)}>
             Maybe later
@@ -529,7 +418,6 @@ export function ChatExperience() {
       )}
       {modal === "settings" && (
         <Modal title="Make it yours." close={() => setModal(null)}>
-          <p>A name that feels right. You can always change it.</p>
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -567,18 +455,13 @@ export function ChatExperience() {
               Save name <Check size={17} />
             </button>
           </form>
-          <div className="saved-facts">
-            <span>YOUR CONTEXT</span>
-            <p>
-              {state.userName
-                ? `You go by ${state.userName}.`
-                : "Tell your assistant what to call you, whenever you’re ready."}
-            </p>
-            <p>
-              {state.inbox
-                ? "Using a fictional sample inbox."
-                : "No inbox connected."}
-            </p>
+          <div className="settings-actions">
+            <button className="text-button" onClick={() => setModal("gmail")}>
+              <Mail size={16} /> Sample inbox
+            </button>
+            <button className="text-button" onClick={() => setModal("reset")}>
+              <RotateCcw size={16} /> Start fresh
+            </button>
           </div>
         </Modal>
       )}
@@ -608,7 +491,4 @@ export function ChatExperience() {
       )}
     </main>
   );
-}
-function ArrowRightIcon() {
-  return <ArrowUpRight size={18} />;
 }

@@ -31,11 +31,11 @@ export function initialState(): DemoState {
     inbox: false,
     callWasActive: false,
     messages: [
-      { id: "welcome", role: "assistant", text: "Hey, you. Glad you’re here." },
+      { id: "welcome", role: "assistant", text: "Hey 👋" },
       {
         id: "introduction",
         role: "assistant",
-        text: "I’m your little bit of extra headspace. First things first — what should you call me? Pick a name, or jump straight into what’s on your mind.",
+        text: "What should you call me?",
       },
     ],
   };
@@ -62,7 +62,6 @@ export function isDemoState(value: unknown): value is DemoState {
     )
   );
 }
-// Deliberately local scripted responses. This adapter will be replaced by the backend.
 export function replyTo(state: DemoState, input: string): DemoState {
   const text = input.trim().slice(0, 2000);
   if (!text) return state;
@@ -84,8 +83,7 @@ export function replyTo(state: DemoState, input: string): DemoState {
       text,
     )
   ) {
-    answer =
-      "Right here works. Tell me what you need a hand with — no call required.";
+    answer = "Sure. What do you need help with?";
   } else if (/\b(email|inbox|recruiter)\b/i.test(text)) {
     if (state.inbox) {
       answer =
@@ -93,22 +91,22 @@ export function replyTo(state: DemoState, input: string): DemoState {
       card = "email";
     } else
       answer =
-        "Let’s find it. Open the sample inbox below to try the email flow, or paste an email here. Your real Gmail isn’t connected in this preview.";
+        "Open the sample inbox from the conversation settings to try an email search. This preview doesn’t access Gmail.";
   } else if (/\b(interview|prepare)\b/i.test(text)) {
     answer =
-      "Let’s make it feel manageable. Start with a 60-second introduction: what you do, one project you’re proud of, and why this role interests you. Then choose two stories that show how you solve problems. What role are you preparing for?";
+      "Start with a 60-second introduction: what you do, one project you’re proud of, and why this role interests you. Then choose two stories that show how you solve problems. What role are you preparing for?";
   } else if (/\b(draft|reply)\b/i.test(text)) {
     answer =
       "Here’s a starting point for the sample invitation:\n\nHi Alex,\nThanks for reaching out — I’d love to learn more about the role. Would Tuesday afternoon work for an introductory call?\nBest,\n[Your name]\n\nThis is a draft only. Nothing has been sent.";
   } else if (/\b(overwhelmed|plan|day|busy)\b/i.test(text)) {
     answer =
-      "Let’s make some room. Write down the three things taking up the most space in your head. We’ll pick the one that matters today, and give the others somewhere to wait.";
+      "What are your three main tasks today? Which one has the nearest deadline?";
   } else if (/\b(cancel|stop|never mind)\b/i.test(text)) {
     answer =
       "Okay, we can leave that there. What would you like to do instead?";
   } else {
     answer =
-      "I’ve kept that here in our conversation. This preview has a few scripted paths to explore: planning your day, preparing for an interview, or finding a sample email. Which would you like to try?";
+      "This preview supports day planning, interview prep, and sample email searches. Which would you like to try?";
   }
   next = {
     ...next,
